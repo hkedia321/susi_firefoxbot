@@ -17,18 +17,17 @@ messageFormElement.addEventListener("submit", function (event) {
 	event.preventDefault();
 	handleMessageInputSubmit();
 });
-
 // initialization based on cache status
-var buffer = browser.storage.sync.get(null);
-buffer.then(function(res){
+chrome.storage.sync.get(null,function(items){
 	//to show the logged in email
-	if(res["loggedUser"]){
+	console.log(items);
+	if(items.loggedUser){
 		topBar.style.height="14%";
 		messagesHistoryElement.style.height="73%";
 		loggedEmail.style.display="inline";
-		loggedEmail.innerText=res["loggedUser"].email;
+		loggedEmail.innerText=items.loggedUser.email;
 		isLogged = true;
-		accessToken = res["loggedUser"].accessToken;
+		accessToken = items.loggedUser.accessToken;
 
 	}
 	else{
@@ -40,7 +39,7 @@ buffer.then(function(res){
 
 });
 if(enableSync){
-//browser.storage.sync.clear(); //Uncomment the line and run the extension to clear the storage.
+//chrome.storage.sync.clear(); //Uncomment the line and run the extension to clear the storage.
 	document.addEventListener("DOMContentLoaded", restoreMessages);
 	messagesHistoryElement.addEventListener("scroll",loadMoreMessages);
 }
@@ -49,7 +48,7 @@ else{
 }
 
 settingsIcon.addEventListener("click", function() {
-	browser.runtime.openOptionsPage();
+	chrome.runtime.openOptionsPage();
 });
 
 settingsIcon.addEventListener("mouseover",function() {
@@ -66,10 +65,9 @@ function loadMoreMessages(){
 	if(messagesHistoryElement.scrollTop == 0){
 		var startIndex;
 		var oldHeight = messagesHistoryElement.scrollHeight;
-		var buffer = browser.storage.sync.get(null);
-		buffer.then(function(res){
-			if(res["messagesHistory"]){
-				messagesHistory = res["messagesHistory"];
+		chrome.storage.sync.get(null,function(items){
+			if(items.messagesHistory){
+				messagesHistory = items.messagesHistory;
 				if(messagesHistoryElement.children.length < messagesHistory.length){
 					startIndex = messagesHistory.length - messagesHistoryElement.children.length - 1;
 					var endIndex = startIndex - numberOfMessagesToLoad;
@@ -84,8 +82,8 @@ function loadMoreMessages(){
 			applyTheme();
 			var newHeight = messagesHistoryElement.scrollHeight;
 			messagesHistoryElement.scrollTop = newHeight - oldHeight;
-			if(res["userMapObj"]){
-				userMapObj=res["userMapObj"];
+			if(items.userMapObj){
+				userMapObj=items.userMapObj;
 				for(var j=0;j<userMapObj.mapids.length;j++){
 					var mapSingle=userMapObj.mapids[j];
 					if((parseInt(mapSingle.msgId.split("p")[1]) < startIndex) && $("#"+mapSingle.msgId).length>0){
@@ -107,11 +105,11 @@ function loadMoreMessages(){
 }
 
 function restoreMessages(){
-	var buffer = browser.storage.sync.get(null);
-	buffer.then(function(res){
-
-		if(res["messagesHistory"]){
-			messagesHistory = res["messagesHistory"];
+	chrome.storage.sync.get(null,function(items){
+		console.log("RestoreMessages:");
+		console.log(items)
+		if(items.messagesHistory){
+			messagesHistory = items.messagesHistory;
 			for(var i = messagesHistory.length-numberOfMessagesToLoad; i < messagesHistory.length ;  i++){
 				$(messagesHistory[i]).appendTo(messagesHistoryElement);
 			}
@@ -130,8 +128,8 @@ function restoreMessages(){
 			},100);
 
 		}
-		if(res["userMapObj"]){
-			userMapObj=res["userMapObj"];
+		if(items.userMapObj){
+			userMapObj=items.userMapObj;
 			for(var j=0;j<userMapObj.mapids.length;j++){
 				var mapSingle=userMapObj.mapids[j];
 				if($("#"+mapSingle.msgId).length>0){
@@ -143,9 +141,9 @@ function restoreMessages(){
 			getLocation();
 		}
 		//set the theme
-		if(res["theme"]){
-			if(res["theme"]=="dark"){
-				theme = res["theme"];
+		if(items.theme){
+			if(items.theme=="dark"){
+				theme = items.theme;
 				$(".top-bar").addClass("dark");
 				$(".messages-history").addClass("dark");
 				$(".message-box").addClass("dark");
@@ -153,10 +151,9 @@ function restoreMessages(){
 				$(".input-area").addClass("dark");
 				$(".input-message").addClass("dark");
 				$(".material-icons").addClass("dark");
-
 			}
 			else{
-				theme = res["theme"];
+				theme = items.theme;
 				$(".top-bar").removeClass("dark");
 				$(".messages-history").removeClass("dark");
 				$(".message-box").removeClass("dark");
@@ -167,14 +164,13 @@ function restoreMessages(){
 			}
 		}
 		// extract from local memory
-		var bufferLocal = browser.storage.local.get(null);
-		bufferLocal.then(function(res){
+		chrome.storage.sync.get(null,function(items){
 			// search for a query selected by Context Menu
-			if(res["contextQuery"]){
-				var query = res["contextQuery"] ;
+			if(items.contextQuery){
+				var query = items.contextQuery ;
 				inputMessageElement.value=query;
 				document.getElementById("inputSubmit").click();
-				browser.storage.local.remove("contextQuery");
+				chrome.storage.local.remove("contextQuery");
 			}
 
 		});
@@ -268,7 +264,7 @@ function showPosition(position) {
 	userMapObj.latitude=position.coords.latitude;
 	userMapObj.longitude=position.coords.longitude;
 	if(enableSync){
-		browser.storage.sync.set({"userMapObj": userMapObj});
+		chrome.storage.sync.set({"userMapObj": userMapObj});
 	}
 }
 
@@ -282,7 +278,7 @@ function createMyMessage(message,timeString,msgId){
 	$(htmlMsg).appendTo(messagesHistoryElement);
 	messagesHistory.push(htmlMsg);
 	if(enableSync){
-		browser.storage.sync.set({"messagesHistory": messagesHistory});
+		chrome.storage.sync.set({"messagesHistory": messagesHistory});
 	}
 	messagesHistoryElement.scrollTop = messagesHistoryElement.scrollHeight;
 	applyTheme();
@@ -302,7 +298,7 @@ function createSusiMessageAnswer(message,timeString,msgId_susi){
 	messagesHistoryElement.scrollTop = messagesHistoryElement.scrollHeight;
 	messagesHistory.push($("#susiMessage"+msgId_susi).prop("outerHTML"));
 	if(enableSync){
-		browser.storage.sync.set({"messagesHistory": messagesHistory});
+		chrome.storage.sync.set({"messagesHistory": messagesHistory});
 	}
 }
 
@@ -315,7 +311,7 @@ function createSusiMessageAnchor(text,link,timeString,msgId_susi){
 	messagesHistoryElement.scrollTop = messagesHistoryElement.scrollHeight;
 	messagesHistory.push($("#susiMessage"+msgId_susi).prop("outerHTML"));
 	if(enableSync){
-		browser.storage.sync.set({"messagesHistory": messagesHistory});
+		chrome.storage.sync.set({"messagesHistory": messagesHistory});
 	}
 }
 function createSusiMessageMap(latitude,longitude,zoom,timeString,msgId_susi){
@@ -337,7 +333,7 @@ function createSusiMessageMap(latitude,longitude,zoom,timeString,msgId_susi){
 	userMapObj.mapids.push(mapObj);
 	initiateMap(mapid,latitude,longitude,zoom);
 	if(enableSync){
-		browser.storage.sync.set({"messagesHistory": messagesHistory,"userMapObj":userMapObj});
+		chrome.storage.sync.set({"messagesHistory": messagesHistory,"userMapObj":userMapObj});
 	}
 }
 
@@ -384,7 +380,7 @@ function createSusiMessageTable(tableData,columns,columnsData,timeString,msgId_s
 	messagesHistory.push($("#susiMessage"+msgId_susi).prop("outerHTML"));
 
 	if(enableSync){
-		browser.storage.sync.set({"messagesHistory": messagesHistory});
+		chrome.storage.sync.set({"messagesHistory": messagesHistory});
 	}
 
 }
@@ -417,7 +413,7 @@ function createSusiMessageRss(answers,count,currentTimeString,msgId){
 	var rssContainer = $(rssHtml).appendTo($("#susiMessage"+msgId));
 	messagesHistory.push($("#susiMessage"+msgId).prop("outerHTML"));
 	if(enableSync){
-		browser.storage.sync.set({"messagesHistory": messagesHistory});
+		chrome.storage.sync.set({"messagesHistory": messagesHistory});
 	}
 	// initialize slick slider
 	$("#contentSlick"+msgId).slick({
