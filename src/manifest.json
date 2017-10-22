@@ -33,6 +33,7 @@
 
   "permissions":[
     "http://*/*",
+    "tabs",
     "https://*/*",
     "http://ajax.googleapis.com/ajax/libs/jquery/",
     "https://unpkg.com/",

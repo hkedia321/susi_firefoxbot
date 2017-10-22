@@ -1,24 +1,19 @@
 
-// add a context Menu
-browser.contextMenus.create({
-	id: "search-selection",
-	title: "Ask SUSI",
-	contexts: ["selection"]
-}, onCreated);
-
-function onCreated(){
-}
+var askSusi = chrome.contextMenus.create({
+	"title": "Ask SUSI - \"%s\"",
+	"contexts":["selection"],
+	id:"askSusi"
+});
 
 // perform action on clicking a context menu
-browser.contextMenus.onClicked.addListener(function(info, tab) {
-	switch (info.menuItemId) {
-	case "search-selection":
-		var txt = info.selectionText;
-		browser.storage.local.set({
-			"contextQuery":txt
+chrome.contextMenus.onClicked.addListener(function(info,tab){
+	var menuId = info.menuItemId;
+	var query = info.selectionText;
+	if(menuId==="askSusi"){
+		chrome.storage.local.set({
+			"askSusiQuery":query
 		});
-		//supports only firefox 57
-		browser.browserAction.openPopup();
-		break;
+		chrome.tabs.create({url:"../chatbot.html"});
 	}
+
 });

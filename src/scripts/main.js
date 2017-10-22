@@ -164,13 +164,13 @@ function restoreMessages(){
 			}
 		}
 		// extract from local memory
-		chrome.storage.sync.get(null,function(items){
+		chrome.storage.local.get(null,function(items){
 			// search for a query selected by Context Menu
-			if(items.contextQuery){
-				var query = items.contextQuery ;
+			if(items.askSusiQuery){
+				var query = items.askSusiQuery ;
 				inputMessageElement.value=query;
 				document.getElementById("inputSubmit").click();
-				chrome.storage.local.remove("contextQuery");
+				chrome.storage.local.remove("askSusiQuery");
 			}
 
 		});
