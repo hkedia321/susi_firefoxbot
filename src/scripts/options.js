@@ -8,18 +8,22 @@ var loginButton = document.getElementById("loginbutton");
 var noLoggedInBlock = document.getElementById("nologgedin");
 var loggedInBlock = document.getElementById("loggedin");
 var changePasswordForm = document.getElementById("changepasswordform");
+var susihardware = document.getElementById("susihardware");
+var submitconnecttohardware = document.getElementById("submitconnecttohardware");
 var accessToken = "";
 var userEmail = "";
 var time = "" ;
 var BASE_URL = "https://api.susi.ai";
 var messagesHistory=[];
 var userMapObj={latitude:null,longitude:null,status:null,mapids:[]};
+var webSocket = null;
 
 themeSelect.addEventListener("change", saveOptions);
 loginForm.addEventListener("submit", login);
 changePasswordForm.addEventListener("submit", handleChangePassword);
 logoutButton.addEventListener("click", logout);
 clearMessageHistoryButton.addEventListener("click", clearMessageHistory);
+submitconnecttohardware.addEventListener("click",handleConnectHardwareSubmit);
 
 document.addEventListener("DOMContentLoaded", persistSettings);
 
@@ -100,6 +104,31 @@ function login(event){
 		}
 	});
 
+}
+function handleConnectHardwareSubmit(){
+	var url = susihardware.value;
+	try {
+		if(webSocket!=null && webSocket.OPEN){
+			webSocket.close();
+		}
+		webSocket = new WebSocket(url);
+		webSocket.onmessage = function incoming(message) {
+			console.log("Message Received from Susi Hardware: " + message);
+			//Actions.createMessage(message.data, "t_1");
+		}
+		webSocket.onopen = function connected() {
+			alert("Connection Successful");
+		}
+		webSocket.onerror = function error() {
+			alert("Connection Error. Please verify that Susi Hardware is running on address you mentioned.");
+		};
+
+		return true;
+	}
+	catch (e) {
+		webSocket = null;
+		return false;
+	}
 }
 function handleChangePassword(event){
 	event.preventDefault();
